@@ -1,4 +1,5 @@
 import javax.mail.MessagingException;
+import org.bson.Document;
 
 public class Main {
     public static void main(String[] args) throws Exception {
@@ -46,5 +47,13 @@ public class Main {
                 e.printStackTrace();
             }
         });
+        
+        //MongoDB stuff starts here
+        MongoClientURI uri = new MongoClientURI("mongodb+srv://erivers:mgxmDaFJyvKPm8J5@cs-492.romgy.mongodb.net/?retryWrites=true&w=majority&appName=CS-492");
+        MongoClient client = new MongoClient(uri);
+        MongoDatabase db = client.getDatabase("user_info");
+        MongoCollection<Document> coll = db.getCollection(user_data);
+        
+        
     }
 }
