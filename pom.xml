@@ -9,5 +9,11 @@
         <artifactId>mongodb-driver-sync</artifactId>
         <version>5.2.0</version>
     </dependency>
+    <dependency>
+    	<groupId>org.mongodb</groupId>
+    	<artifactId>mongodb-driver-legacy</artifactId>
+    	<version>3.12.10</version>
+    	<scope>compile</scope>
+</dependency>
   </dependencies>
 </project>
