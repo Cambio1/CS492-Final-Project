@@ -3,4 +3,11 @@
   <groupId>CS492-Final-Project</groupId>
   <artifactId>CS492-Final-Project</artifactId>
   <version>0.0.1-SNAPSHOT</version>
+  <dependencies>
+	<dependency>
+    	<groupId>org.mongodb</groupId>
+        <artifactId>mongodb-driver-sync</artifactId>
+        <version>5.2.0</version>
+    </dependency>
+  </dependencies>
 </project>
