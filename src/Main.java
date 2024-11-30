@@ -1,4 +1,4 @@
-//import javax.mail.MessagingException;
+import javax.mail.MessagingException;
 import org.bson.Document;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
@@ -13,7 +13,6 @@ import com.mongodb.ServerApiVersion;
 
 public class Main {
     public static void main(String[] args) throws Exception {
-    	/*
         // Step 1: Initialize Firebase
         FirebaseInitializer.initialize();
 
@@ -58,7 +57,6 @@ public class Main {
                 e.printStackTrace();
             }
         });
-        */
         
         //MongoDB stuff starts here; below is sample code taken from MongoDB
         String connectionString = "mongodb+srv://cs492finalproject123:ZfIAfxrK8W6PvAcL@cs-492.burpl.mongodb.net/?retryWrites=true&w=majority&appName=CS-492";
