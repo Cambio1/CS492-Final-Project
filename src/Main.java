@@ -33,6 +33,8 @@ public class Main {
                 e.printStackTrace();
             }
         }
+       
+        EmailSender.sendVerificationCode("cs492finalproject123@gmail.com", "123");
         
     }
 }

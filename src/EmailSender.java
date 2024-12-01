@@ -5,8 +5,10 @@ import java.util.Properties;
 public class EmailSender {
     public static void sendVerificationCode(String recipient, String code) throws MessagingException {
         String host = "smtp.gmail.com";
-        String from = "your-email@gmail.com";
-        String password = "your-email-password"; // Use app-specific passwords if 2FA is enabled.
+        String from = "cs492finalproject123@gmail.com";
+        String password = "ipqejohmvzlbaxrz"; // Use app-specific passwords if 2FA is enabled.
+        //ipqe johm vzlb axrz
+        
 
         Properties props = new Properties();
         props.put("mail.smtp.auth", "true");
