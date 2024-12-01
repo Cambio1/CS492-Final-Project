@@ -24,6 +24,7 @@ public class EmailSender {
         }
         return sb.toString ();
 	}
+	
     public static void sendVerificationCode(String recipient, String code) throws MessagingException {
         String host = "smtp.gmail.com";
         String from = "cs492finalproject123@gmail.com";
