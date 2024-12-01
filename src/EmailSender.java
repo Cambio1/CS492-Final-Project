@@ -1,8 +1,29 @@
-import javax.mail.*;
-import javax.mail.internet.*;
 import java.util.Properties;
+import java.util.Random;
+import javax.mail.Authenticator;
+import javax.mail.Message;
+import javax.mail.MessagingException;
+import javax.mail.PasswordAuthentication;
+import javax.mail.Session;
+import javax.mail.Transport;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
 
 public class EmailSender {
+	
+	/*
+	 * @author MaVRoSCy on Stack Exchange
+	 * Code from here: https://stackoverflow.com/a/20536819
+	 */
+	public static String generateCode(String candidateChars, int length) {
+        StringBuilder sb = new StringBuilder ();
+        Random random = new Random ();
+        for (int i = 0; i < length; i ++) {
+            sb.append (candidateChars.charAt (random.nextInt (candidateChars
+                    .length ())));
+        }
+        return sb.toString ();
+	}
     public static void sendVerificationCode(String recipient, String code) throws MessagingException {
         String host = "smtp.gmail.com";
         String from = "cs492finalproject123@gmail.com";
