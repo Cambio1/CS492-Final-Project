@@ -16,12 +16,15 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
 public class EmailSender {
-    
-    /*
-     * @author MaVRoSCy on Stack Exchange
-     * Code from here: https://stackoverflow.com/a/20536819
-     */
-    public static String generateCode(String candidateChars, int length) {
+	/**
+     * Generates a random code to be sent to the user's email
+     * @param candidateChars    The characters that can be used to create the code
+     * @param length            lemgth of the codde
+     * 
+	 * @author MaVRoSCy on Stack Exchange
+	 * Code from here: https://stackoverflow.com/a/20536819
+	 */
+	public static String generateCode(String candidateChars, int length) {
         StringBuilder sb = new StringBuilder ();
         Random random = new Random ();
         for (int i = 0; i < length; i ++) {
