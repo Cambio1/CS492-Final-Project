@@ -3,13 +3,19 @@ import org.bson.conversions.Bson;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
+
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBCursor;
 import com.mongodb.MongoException;
+import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.Projections;
+import com.mongodb.client.model.Sorts;
 import com.mongodb.client.result.InsertManyResult;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
@@ -24,6 +30,7 @@ import org.slf4j.LoggerFactory;
  */
 
 public class Main {
+	
     public static void main(String[] args) throws Exception {
     	String uri = "mongodb+srv://cs492finalproject123:ZfIAfxrK8W6PvAcL@cs-492.burpl.mongodb.net/?retryWrites=true&w=majority&appName=CS-492";
     	Scanner scanner = new Scanner(System.in);
@@ -36,6 +43,11 @@ public class Main {
     	String[] splitText;
     	String[] splitHolder;
     	EncryptionUtility encryptionUtil = new EncryptionUtility();
+    	String decryptedText;
+    	String userSalt = null;
+    	String userIv = null;
+    	String passwordSalt;
+    	String passwordIv;
     	
     	/*
     	 * @author chneau on Stack Exchange
@@ -95,16 +107,50 @@ public class Main {
                     // Reference the database and collection to use
                     MongoDatabase database = mongoClient.getDatabase("cs492data");
                     MongoCollection<Document> collection = database.getCollection(userCollection);
+                    System.out.println("Which service would you like the credentials of?");
+                    String desiredServiceName = scanner.nextLine();
+                    
+                    // Retrieves first document with matching service name
+                    Document foundDoc = collection.find(Filters.eq("service_name", desiredServiceName))
+                            .first();
+                    
+                    // Print out found document
+                    if (foundDoc == null) {
+                    	System.out.println("Looks like you don't have credentials for that service!");
+                    } else {
+                        System.out.println(foundDoc);
+                    }
+                    
                     /*
-                     * @author Vladi on Stack Exchange
-                     * Original code: https://stackoverflow.com/a/68610153
-                     */
                     MongoCursor<Document> cursor = collection.find().iterator();
                     while (cursor.hasNext()) {
                     	System.out.println("Your data:");
                         System.out.println(cursor.next() );
+                    }*/
+                    
+                    /*
+                    FindIterable<Document> mydatabaserecords = database.getCollection(userCollection).find();
+                    MongoCursor<Document> iterator = mydatabaserecords.iterator();
+                    while (iterator.hasNext()) {
+                        Document doc = iterator.next();
+                        System.out.println(iterator.next());
+                        Document document = collection.find().first(); 
+                        if (document != null) {
+                            for (String key : document.keySet()) {
+                                Object value = document.get(key);
+                                String tempVal = value.toString();
+                                splitText = tempVal.split("");
+                                System.out.println(userIv);
+                                splitHolder = EncryptionUtility.cbcDecrypt(splitText, userPassword, userIv, userSalt);
+                                System.out.println(key + ": " + value);
+                            }
+                            
+                        }
+                        
                     }
+                    */
         		}
+        		
         	} else {
         		// If codes don't match, stop program
         		System.out.println("Codes do not match, aborting process...");
@@ -129,23 +175,29 @@ public class Main {
     		String serviceUsername = scanner.nextLine();
     		// Encrypt username
     		splitText = serviceUsername.split("");
-    		splitHolder = EncryptionUtility.cbcEncrypt(splitText, userCollection);
+    		splitHolder = EncryptionUtility.cbcEncrypt(splitText, userPassword);
+    		userIv = EncryptionUtility.getIv();
+    		userSalt = EncryptionUtility.getSalt();
     		currentEncryptedUsername = String.join("", splitHolder);
     		
     		System.out.println("Please enter your password for " + serviceName);
     		String servicePassword = scanner.nextLine();
     		// Encrypt password
     		splitText = servicePassword.split("");
-    		splitHolder = EncryptionUtility.cbcEncrypt(splitText, userCollection);
+    		splitHolder = EncryptionUtility.cbcEncrypt(splitText, userPassword);
+    		passwordIv = EncryptionUtility.getIv();
+    		passwordSalt = EncryptionUtility.getSalt();
     		currentEncryptedPassword = String.join("", splitHolder);
     		// Establish connection again...
     		try (MongoClient mongoClient = MongoClients.create(uri)) {
                 // Reference the database and collection to use
                 MongoDatabase database = mongoClient.getDatabase("cs492data");
                 MongoCollection<Document> collection = database.getCollection(userCollection);
-                // Create two documents
+                // Create document
                 List<Document> userData = Arrays.asList(
-                        new Document().append(serviceName, new Document().append("username", currentEncryptedUsername).append("password", currentEncryptedPassword))
+                        new Document().append(serviceName, new Document().append("username", currentEncryptedUsername).append("password", currentEncryptedPassword)
+                        		.append("user_iv", userIv).append("user_salt", userSalt))
+                        		.append("password_iv", passwordIv).append("password_salt", passwordSalt)
                         );
                 try {
                     // Insert the documents into the specified collection

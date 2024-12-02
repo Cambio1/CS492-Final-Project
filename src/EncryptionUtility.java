@@ -10,6 +10,8 @@ import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 
 public class EncryptionUtility {
+    static String thisSalt;
+    static String thisIv;
     
     // Function to generate a random IV (16 bytes)
     private static byte[] generateIV() {
@@ -50,6 +52,9 @@ public class EncryptionUtility {
         
         // Base64 encode the salt
         String encodedSalt = encodeBase64(salt);
+        thisSalt = encodedSalt;
+        thisIv = ivBase64;
+        
         
         /*
         // Combine IV, encrypted message, and salt into a single message for transmission
@@ -125,5 +130,13 @@ public class EncryptionUtility {
                     + Character.digit(hex.charAt(i + 1), 16));
         }
         return result;
+    }
+    
+    public static String getSalt() {
+    	return thisSalt;
+    }
+    
+    public static String getIv() {
+    	return thisIv;
     }
 }
