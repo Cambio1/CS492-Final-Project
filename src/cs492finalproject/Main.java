@@ -151,11 +151,12 @@ public class Main {
 					System.out.println("User: " + tempString);
 					
 					// Decrypt password (if needed, similar to username)
-					// String encryptedPassword = foundDoc.get("password").toString();
-					// splitHolder = EncryptionUtility.cbcDecrypt(new String[]{encryptedPassword}, userPassword, passwordIv, passwordSalt);
-					// String decryptedPassword = splitHolder[0];
-					// System.out.println("Password: " + decryptedPassword);
-					
+					String encryptedPassword = foundDoc.get("password").toString();
+					passwordIv = foundDoc.get("password_iv").toString();
+					passwordSalt = foundDoc.get("password_salt").toString();
+					splitHolder = EncryptionUtility.cbcDecrypt(new String[]{encryptedPassword}, userPassword, passwordIv, passwordSalt);
+					String decryptedPassword = splitHolder[0];
+					System.out.println("Password: " + decryptedPassword);
 				}
 			}
 			// add
