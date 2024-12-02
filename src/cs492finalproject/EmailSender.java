@@ -14,7 +14,11 @@ import javax.mail.internet.MimeMessage;
 
 public class EmailSender {
 	
-	/*
+	/**
+     * Generates a random code to be sent to the user's email
+     * @param candidateChars    The characters that can be used to create the code
+     * @param length            lemgth of the codde
+     * 
 	 * @author MaVRoSCy on Stack Exchange
 	 * Code from here: https://stackoverflow.com/a/20536819
 	 */
@@ -28,6 +32,14 @@ public class EmailSender {
         return sb.toString ();
 	}
 	
+
+    /**
+     * Sends verification code to the user's email to authenticate their identity
+     * 
+     * @param recipient     where the code should be sent
+     * @param code          code to be sent 
+     * @throws MessagingException
+     */
     public static void sendVerificationCode(String recipient, String code) throws MessagingException {
         String host = "smtp.gmail.com";
         String from = "cs492finalproject123@gmail.com";

@@ -37,7 +37,7 @@ public class Main {
 		String objectId;
 		String currentEncryptedUsername;
 		String currentEncryptedPassword;
-		String[] Text;
+		String[] userText;
 		String[] splitHolder;
 		EncryptionUtility encryptionUtil = new EncryptionUtility();
 		String decryptedText;
@@ -166,22 +166,18 @@ public class Main {
 			System.out.println("Please enter your username for " + serviceName);
 			String serviceUsername = scanner.nextLine();
 			// Encrypt username
-			//splitText = serviceUsername.split("");
-			Text = new String[]{serviceUsername}; 
-			EncryptionUtility.EncryptedData encryptedData = EncryptionUtility.cbcEncrypt(Text, userPassword);
-			//splitHolder = encryptedData.getEncryptedMessage();
+			userText = new String[]{serviceUsername}; 
+			EncryptionUtility.EncryptedData encryptedData = EncryptionUtility.cbcEncrypt(userText, userPassword);
 			userIv = encryptedData.getIv();
 			userSalt = encryptedData.getSalt();
 			currentEncryptedUsername = encryptedData.getEncryptedMessage()[0];
-			//currentEncryptedUsername = String.join("/", encryptedData.getEncryptedMessage());
+
 
 			System.out.println("Please enter your password for " + serviceName);
 			String servicePassword = scanner.nextLine();
 			// Encrypt password
-			//splitText = servicePassword.split("");
-			Text = new String[]{servicePassword};
-			EncryptionUtility.EncryptedData encryptedData1 = EncryptionUtility.cbcEncrypt(Text, userPassword);
-			//splitHolder =  encryptedData1.getEncryptedMessage();
+			userText = new String[]{servicePassword};
+			EncryptionUtility.EncryptedData encryptedData1 = EncryptionUtility.cbcEncrypt(userText, userPassword);
 			passwordIv = encryptedData1.getIv();
 			passwordSalt = encryptedData1.getSalt();
 			currentEncryptedPassword = String.join("", encryptedData1.getEncryptedMessage());

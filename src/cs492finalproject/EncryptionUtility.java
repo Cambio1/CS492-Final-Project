@@ -16,8 +16,6 @@ import javax.crypto.spec.SecretKeySpec;
  * Implements password-based encryption with salt and IV for secure data protection.
  */
 public class EncryptionUtility {
-    //static String thisSalt;
-    //static String thisIv;
     
     /**
      * Container class for encrypted data including the encrypted message, initialization vector, and salt.
@@ -30,9 +28,9 @@ public class EncryptionUtility {
         /**
          * Constructs a new EncryptedData object.
          *
-         * @param encryptedMessage Array of encrypted message blocks in Base64 format
-         * @param iv Base64-encoded initialization vector
-         * @param salt Base64-encoded salt value
+         * @param encryptedMessage      Array of encrypted message blocks in Base64 format
+         * @param iv                    Base64-encoded initialization vector
+         * @param salt                  Base64-encoded salt value
          */
         public EncryptedData(String[] encryptedMessage, String iv, String salt) {
             this.encryptedMessage = encryptedMessage;
@@ -99,9 +97,6 @@ public class EncryptionUtility {
                 encryptedMsg.add(encryptedBlockBase64);
             }
             
-            //System.out.println("IV (Base64 encoded): " + ivBase64);
-            //System.out.println("Salt (Base64 encoded): " + saltBase64);
-            
             return new EncryptedData(
                 encryptedMsg.toArray(new String[0]),
                 ivBase64,
@@ -115,12 +110,12 @@ public class EncryptionUtility {
     /**
      * Decrypts an array of encrypted strings using AES in CBC mode.
      *
-     * @param encryptedMsg Array of Base64-encoded encrypted strings
-     * @param password     Password used for key derivation
-     * @param encodedIV    Base64-encoded initialization vector
-     * @param encodedSalt  Base64-encoded salt
-     * @return Array of decrypted strings
-     * @throws Exception if decryption fails
+     * @param encryptedMsg      Array of Base64-encoded encrypted strings
+     * @param password          Password used for key derivation
+     * @param encodedIV         Base64-encoded initialization vector
+     * @param encodedSalt       Base64-encoded salt
+     * @return                  Array of decrypted strings
+     * @throws Exception        if decryption fails
      */
     public static String[] cbcDecrypt(String[] encryptedMsg, String password, String encodedIV, String encodedSalt) throws Exception {
         // Normalize and decode IV and salt
@@ -150,10 +145,10 @@ public class EncryptionUtility {
     /**
      * Decrypts encrypted data using the provided password.
      *
-     * @param encryptedData EncryptedData object containing the encrypted message, IV, and salt
-     * @param password Password used for key derivation
-     * @return Array of decrypted strings
-     * @throws Exception if decryption fails
+     * @param encryptedData     EncryptedData object containing the encrypted message, IV, and salt
+     * @param password          Password used for key derivation
+     * @return                  Array of decrypted strings
+     * @throws Exception        if decryption fails
      */
     public static String[] cbcDecrypt(EncryptedData encryptedData, String password) throws Exception {
         return cbcDecrypt(
@@ -179,8 +174,8 @@ public class EncryptionUtility {
     /**
      * Generates a random salt of specified length for key derivation.
      *
-     * @param length Length of the salt in bytes
-     * @return byte array containing the random salt
+     * @param length    Length of the salt in bytes
+     * @return          byte array containing the random salt
      */
     private static byte[] generateSalt(int length) {
         SecureRandom r = new SecureRandom();
@@ -193,10 +188,10 @@ public class EncryptionUtility {
      * Derives an AES key from a password and salt using PBKDF2 with HMAC-SHA256.
      * Uses 65536 iterations and generates a 256-bit key.
      *
-     * @param password Password to derive key from
-     * @param salt     Salt for key derivation
-     * @return SecretKeySpec for AES encryption
-     * @throws Exception if key derivation fails
+     * @param password      Password to derive key from
+     * @param salt          Salt for key derivation
+     * @return              SecretKeySpec for AES encryption
+     * @throws Exception    if key derivation fails
      */
     public static SecretKeySpec deriveKey(String password, byte[] salt) throws Exception {
         PBEKeySpec spec = new PBEKeySpec(password.toCharArray(), salt, 65536, 256);
@@ -208,8 +203,8 @@ public class EncryptionUtility {
     /**
      * Encodes a byte array to Base64 string.
      *
-     * @param data Byte array to encode
-     * @return Base64-encoded string
+     * @param data      Byte array to encode
+     * @return          Base64-encoded string
      */
     public static String encodeBase64(byte[] data) {
         return Base64.getEncoder().encodeToString(data);
@@ -218,8 +213,8 @@ public class EncryptionUtility {
     /**
      * Decodes a Base64 string to byte array.
      *
-     * @param data Base64-encoded string
-     * @return Decoded byte array
+     * @param data      Base64-encoded string
+     * @return          Decoded byte array
      */
     public static byte[] decodeBase64(String data) {
         return Base64.getDecoder().decode(data);
@@ -228,8 +223,8 @@ public class EncryptionUtility {
     /**
     * Validates and adds necessary padding to a Base64 string.
     *
-    * @param base64String Base64 string to validate and pad
-    * @return Padded Base64 string
+    * @param base64String   Base64 string to validate and pad
+    * @return               Padded Base64 string
     */
     private static String normalizeBase64(String base64String) {
         if (base64String == null) {
