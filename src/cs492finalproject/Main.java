@@ -1,26 +1,24 @@
-import org.bson.Document;
-import org.bson.conversions.Bson;
+package cs492finalproject;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBCursor;
+import org.bson.Document;
+import org.bson.conversions.Bson;
+import org.slf4j.LoggerFactory;
+
 import com.mongodb.MongoException;
-import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
-import com.mongodb.client.model.Projections;
-import com.mongodb.client.model.Sorts;
 import com.mongodb.client.result.InsertManyResult;
+
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
-import org.slf4j.LoggerFactory;
 
 /*
  * EMAIL CREDENTIALS
@@ -163,18 +161,20 @@ public class Main {
 			String serviceUsername = scanner.nextLine();
 			// Encrypt username
 			splitText = serviceUsername.split("");
-			splitHolder = EncryptionUtility.cbcEncrypt(splitText, userPassword);
-			userIv = EncryptionUtility.getIv();
-			userSalt = EncryptionUtility.getSalt();
+			EncryptionUtility.EncryptedData encryptedData = EncryptionUtility.cbcEncrypt(splitText, userPassword);
+			splitHolder = encryptedData.getEncryptedMessage();
+			userIv = encryptedData.getIv();
+			userSalt = encryptedData.getSalt();
 			currentEncryptedUsername = String.join("", splitHolder);
 
 			System.out.println("Please enter your password for " + serviceName);
 			String servicePassword = scanner.nextLine();
 			// Encrypt password
 			splitText = servicePassword.split("");
-			splitHolder = EncryptionUtility.cbcEncrypt(splitText, userPassword);
-			passwordIv = EncryptionUtility.getIv();
-			passwordSalt = EncryptionUtility.getSalt();
+			EncryptionUtility.EncryptedData encryptedData1 = EncryptionUtility.cbcEncrypt(splitText, userPassword);
+			splitHolder =  encryptedData1.getEncryptedMessage();
+			passwordIv = encryptedData1.getIv();
+			passwordSalt = encryptedData1.getSalt();
 			currentEncryptedPassword = String.join("", splitHolder);
 			// Establish connection again...
 			try (MongoClient mongoClient = MongoClients.create(uri)) {

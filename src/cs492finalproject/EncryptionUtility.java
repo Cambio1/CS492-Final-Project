@@ -1,3 +1,5 @@
+package cs492finalproject;
+
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.ArrayList;
@@ -52,7 +54,7 @@ public class EncryptionUtility {
          *
          * @return Base64-encoded initialization vector
          */
-        private String getIv() { 
+        public String getIv() { 
             return iv; 
         }
 
@@ -61,7 +63,7 @@ public class EncryptionUtility {
          *
          * @return Base64-encoded salt
          */
-        private String getSalt() { 
+        public String getSalt() { 
             return salt; 
         }
     }
@@ -70,10 +72,10 @@ public class EncryptionUtility {
     /**
      * Encrypts an array of strings using AES in CBC mode with password-based key derivation.
      *
-     * @param msg      Array of strings to encrypt
-     * @param password Password used for key derivation
-     * @return EncryptedData object containing the encrypted message, IV, and salt
-     * @throws EncryptionException if encryption fails
+     * @param msg                       Array of strings to encrypt
+     * @param password                  Password used for key derivation
+     * @return                          EncryptedData object containing the encrypted message, IV, and salt
+     * @throws EncryptionException      if encryption fails
      */
     public static EncryptedData cbcEncrypt(String[] msg, String password) throws EncryptionException {
         try {
@@ -120,7 +122,7 @@ public class EncryptionUtility {
      * @return Array of decrypted strings
      * @throws Exception if decryption fails
      */
-    private static String[] cbcDecrypt(String[] encryptedMsg, String password, String encodedIV, String encodedSalt) throws Exception {
+    public static String[] cbcDecrypt(String[] encryptedMsg, String password, String encodedIV, String encodedSalt) throws Exception {
         byte[] iv = Base64.getDecoder().decode(encodedIV);
         byte[] salt = decodeBase64(encodedSalt);
         
