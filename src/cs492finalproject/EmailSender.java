@@ -38,6 +38,7 @@ public class EmailSender {
         /*
 		 * @author Pankaj on Digital Ocean
 		 * Original code here: https://www.digitalocean.com/community/tutorials/java-read-file-to-string
+         * For application password so it isn't stored directly in code
 		 */
 		BufferedReader reader = new BufferedReader(new FileReader("src/assets/app_password"));
 		StringBuilder stringBuilder = new StringBuilder();
