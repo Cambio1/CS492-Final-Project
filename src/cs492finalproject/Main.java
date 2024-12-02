@@ -146,7 +146,8 @@ public class Main {
 					System.out.println(encryptedUsername);
 					userIv = foundDoc.get("user_iv").toString();
 					userSalt = foundDoc.get("user_salt").toString();
-					splitText = encryptedUsername.split("");
+					splitText = new String[]{encryptedUsername};  // Changed: treat as single string
+					//splitText = encryptedUsername.split("");
 					splitHolder = EncryptionUtility.cbcDecrypt(splitText, userPassword, userIv, userSalt);
 					tempString = String.join("", splitHolder);
 					System.out.println("User: " + tempString);
@@ -160,7 +161,8 @@ public class Main {
 			System.out.println("Please enter your username for " + serviceName);
 			String serviceUsername = scanner.nextLine();
 			// Encrypt username
-			splitText = serviceUsername.split("");
+			//splitText = serviceUsername.split("");
+			splitText = new String[]{serviceUsername}; 
 			EncryptionUtility.EncryptedData encryptedData = EncryptionUtility.cbcEncrypt(splitText, userPassword);
 			splitHolder = encryptedData.getEncryptedMessage();
 			userIv = encryptedData.getIv();
@@ -170,7 +172,8 @@ public class Main {
 			System.out.println("Please enter your password for " + serviceName);
 			String servicePassword = scanner.nextLine();
 			// Encrypt password
-			splitText = servicePassword.split("");
+			//splitText = servicePassword.split("");
+			splitText = new String[]{servicePassword};
 			EncryptionUtility.EncryptedData encryptedData1 = EncryptionUtility.cbcEncrypt(splitText, userPassword);
 			splitHolder =  encryptedData1.getEncryptedMessage();
 			passwordIv = encryptedData1.getIv();
