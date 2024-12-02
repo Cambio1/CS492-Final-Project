@@ -16,8 +16,8 @@ import javax.crypto.spec.SecretKeySpec;
  * Implements password-based encryption with salt and IV for secure data protection.
  */
 public class EncryptionUtility {
-    static String thisSalt;
-    static String thisIv;
+    //static String thisSalt;
+    //static String thisIv;
     
     /**
      * Container class for encrypted data including the encrypted message, initialization vector, and salt.
@@ -123,26 +123,29 @@ public class EncryptionUtility {
      * @throws Exception if decryption fails
      */
     public static String[] cbcDecrypt(String[] encryptedMsg, String password, String encodedIV, String encodedSalt) throws Exception {
-        byte[] iv = Base64.getDecoder().decode(encodedIV);
-        byte[] salt = decodeBase64(encodedSalt);
+        // Normalize and decode IV and salt
+        byte[] iv = Base64.getDecoder().decode(normalizeBase64(encodedIV));
+        byte[] salt = Base64.getDecoder().decode(normalizeBase64(encodedSalt));
         
+        // Derive key
         SecretKeySpec key = deriveKey(password, salt);
-        
+    
+        // Initialize Cipher
         Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
         IvParameterSpec ivSpec = new IvParameterSpec(iv);
         cipher.init(Cipher.DECRYPT_MODE, key, ivSpec);
-        
+    
+        // Decrypt each block
         ArrayList<String> decryptedMsg = new ArrayList<>();
-        
         for (String encryptedBlock : encryptedMsg) {
-            byte[] decodedBlock = Base64.getDecoder().decode(encryptedBlock);
+            byte[] decodedBlock = Base64.getDecoder().decode(normalizeBase64(encryptedBlock));
             byte[] decryptedBlock = cipher.doFinal(decodedBlock);
-            String decryptedString = new String(decryptedBlock, StandardCharsets.UTF_8);
-            decryptedMsg.add(decryptedString);
+            decryptedMsg.add(new String(decryptedBlock, StandardCharsets.UTF_8));
         }
-        
+    
         return decryptedMsg.toArray(new String[0]);
     }
+    
 
     /**
      * Decrypts encrypted data using the provided password.
@@ -221,6 +224,21 @@ public class EncryptionUtility {
     public static byte[] decodeBase64(String data) {
         return Base64.getDecoder().decode(data);
     }
+
+    /**
+    * Validates and adds necessary padding to a Base64 string.
+    *
+    * @param base64String Base64 string to validate and pad
+    * @return Padded Base64 string
+    */
+    private static String normalizeBase64(String base64String) {
+        if (base64String == null) {
+            throw new IllegalArgumentException("Base64 string is null");
+        }
+        // Add padding if necessary
+        return base64String + "=".repeat((4 - base64String.length() % 4) % 4);
+    }
+
 
     /**
      * Converts a hexadecimal string to byte array.

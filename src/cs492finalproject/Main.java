@@ -37,7 +37,7 @@ public class Main {
 		String objectId;
 		String currentEncryptedUsername;
 		String currentEncryptedPassword;
-		String[] splitText;
+		String[] Text;
 		String[] splitHolder;
 		EncryptionUtility encryptionUtil = new EncryptionUtility();
 		String decryptedText;
@@ -111,8 +111,11 @@ public class Main {
 		 * add = Add new credentials 
 		 * exit = Stop program
 		 */
-		System.out.println("LIST OF COMMANDS:\nget - View credentials \n"
-				+ "add - Add new credentials\nexit - Quit the program");
+		System.out.println("""
+                                   LIST OF COMMANDS:
+                                   get - View credentials 
+                                   add - Add new credentials
+                                   exit - Quit the program""");
 		System.out.println("Please enter command: ");
 		String command = scanner.nextLine();
 		// exit
@@ -139,18 +142,19 @@ public class Main {
 				} else {
 					System.out.println(foundDoc);
 					
-					//String[] cbcDecrypt(String[] encryptedMsg, String password, String encodedIV, String encodedSalt)
-					
 					// Decrypt username
 					String encryptedUsername = foundDoc.get("username").toString();
-					System.out.println(encryptedUsername);
 					userIv = foundDoc.get("user_iv").toString();
 					userSalt = foundDoc.get("user_salt").toString();
-					splitText = new String[]{encryptedUsername};  // Changed: treat as single string
-					//splitText = encryptedUsername.split("");
-					splitHolder = EncryptionUtility.cbcDecrypt(splitText, userPassword, userIv, userSalt);
-					tempString = String.join("", splitHolder);
+					splitHolder = EncryptionUtility.cbcDecrypt(new String[]{encryptedUsername}, userPassword, userIv, userSalt);
+					tempString = splitHolder[0];
 					System.out.println("User: " + tempString);
+					
+					// Decrypt password (if needed, similar to username)
+					// String encryptedPassword = foundDoc.get("password").toString();
+					// splitHolder = EncryptionUtility.cbcDecrypt(new String[]{encryptedPassword}, userPassword, passwordIv, passwordSalt);
+					// String decryptedPassword = splitHolder[0];
+					// System.out.println("Password: " + decryptedPassword);
 					
 				}
 			}
@@ -162,23 +166,24 @@ public class Main {
 			String serviceUsername = scanner.nextLine();
 			// Encrypt username
 			//splitText = serviceUsername.split("");
-			splitText = new String[]{serviceUsername}; 
-			EncryptionUtility.EncryptedData encryptedData = EncryptionUtility.cbcEncrypt(splitText, userPassword);
-			splitHolder = encryptedData.getEncryptedMessage();
+			Text = new String[]{serviceUsername}; 
+			EncryptionUtility.EncryptedData encryptedData = EncryptionUtility.cbcEncrypt(Text, userPassword);
+			//splitHolder = encryptedData.getEncryptedMessage();
 			userIv = encryptedData.getIv();
 			userSalt = encryptedData.getSalt();
-			currentEncryptedUsername = String.join("", splitHolder);
+			currentEncryptedUsername = encryptedData.getEncryptedMessage()[0];
+			//currentEncryptedUsername = String.join("/", encryptedData.getEncryptedMessage());
 
 			System.out.println("Please enter your password for " + serviceName);
 			String servicePassword = scanner.nextLine();
 			// Encrypt password
 			//splitText = servicePassword.split("");
-			splitText = new String[]{servicePassword};
-			EncryptionUtility.EncryptedData encryptedData1 = EncryptionUtility.cbcEncrypt(splitText, userPassword);
-			splitHolder =  encryptedData1.getEncryptedMessage();
+			Text = new String[]{servicePassword};
+			EncryptionUtility.EncryptedData encryptedData1 = EncryptionUtility.cbcEncrypt(Text, userPassword);
+			//splitHolder =  encryptedData1.getEncryptedMessage();
 			passwordIv = encryptedData1.getIv();
 			passwordSalt = encryptedData1.getSalt();
-			currentEncryptedPassword = String.join("", splitHolder);
+			currentEncryptedPassword = String.join("", encryptedData1.getEncryptedMessage());
 			// Establish connection again...
 			try (MongoClient mongoClient = MongoClients.create(uri)) {
 				// Reference the database and collection to use
