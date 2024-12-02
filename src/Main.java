@@ -1,32 +1,16 @@
-import org.bson.BasicBSONObject;
-import org.bson.BsonDocument;
 import org.bson.Document;
-import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.conversions.Bson;
-import static com.mongodb.client.model.Filters.eq;
-import com.mongodb.client.model.*;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
-import org.bson.*;
-import com.mongodb.BasicDBObject;
-import com.mongodb.ConnectionString;
-import com.mongodb.DBObject;
-import com.mongodb.MongoClientSettings;
 import com.mongodb.MongoException;
-import com.mongodb.ServerApi;
-import com.mongodb.ServerApiVersion;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
-import com.mongodb.client.model.Updates;
 import com.mongodb.client.result.InsertManyResult;
-import com.mongodb.client.result.UpdateResult;
-import com.mongodb.util.JSON;
-
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
@@ -37,7 +21,6 @@ import org.slf4j.LoggerFactory;
  * EMAIL CREDENTIALS
  * Credentials:
  *	email: cs492finalproject123@gmail.com
- *	password: Xb~G;.n6?2#C3f5T[u4V&(
  */
 
 public class Main {
@@ -48,6 +31,11 @@ public class Main {
     	Document userDoc = null;
     	String userCollection = null;
     	String objectId;
+    	String currentEncryptedUsername;
+    	String currentEncryptedPassword;
+    	String[] splitText;
+    	String[] splitHolder;
+    	EncryptionUtility encryptionUtil = new EncryptionUtility();
     	
     	/*
     	 * @author chneau on Stack Exchange
@@ -107,9 +95,14 @@ public class Main {
                     // Reference the database and collection to use
                     MongoDatabase database = mongoClient.getDatabase("cs492data");
                     MongoCollection<Document> collection = database.getCollection(userCollection);
+                    /*
+                     * @author Vladi on Stack Exchange
+                     * Original code: https://stackoverflow.com/a/68610153
+                     */
                     MongoCursor<Document> cursor = collection.find().iterator();
                     while (cursor.hasNext()) {
-                        System.out.println("collection is " +cursor.next() );
+                    	System.out.println("Your data:");
+                        System.out.println(cursor.next() );
                     }
         		}
         	} else {
@@ -134,9 +127,17 @@ public class Main {
     		String serviceName = scanner.nextLine();
     		System.out.println("Please enter your username for " + serviceName);
     		String serviceUsername = scanner.nextLine();
+    		// Encrypt username
+    		splitText = serviceUsername.split("");
+    		splitHolder = EncryptionUtility.cbcEncrypt(splitText, userCollection);
+    		currentEncryptedUsername = String.join("", splitHolder);
+    		
     		System.out.println("Please enter your password for " + serviceName);
     		String servicePassword = scanner.nextLine();
-    		
+    		// Encrypt password
+    		splitText = servicePassword.split("");
+    		splitHolder = EncryptionUtility.cbcEncrypt(splitText, userCollection);
+    		currentEncryptedPassword = String.join("", splitHolder);
     		// Establish connection again...
     		try (MongoClient mongoClient = MongoClients.create(uri)) {
                 // Reference the database and collection to use
@@ -144,7 +145,7 @@ public class Main {
                 MongoCollection<Document> collection = database.getCollection(userCollection);
                 // Create two documents
                 List<Document> userData = Arrays.asList(
-                        new Document().append(serviceName, new Document().append("username", serviceUsername).append("password", servicePassword))
+                        new Document().append(serviceName, new Document().append("username", currentEncryptedUsername).append("password", currentEncryptedPassword))
                         );
                 try {
                     // Insert the documents into the specified collection

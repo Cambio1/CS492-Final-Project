@@ -51,9 +51,11 @@ public class EncryptionUtility {
         // Base64 encode the salt
         String encodedSalt = encodeBase64(salt);
         
+        /*
         // Combine IV, encrypted message, and salt into a single message for transmission
         System.out.println("IV (Base64 encoded): " + ivBase64);  // Print the IV (for demonstration)
         System.out.println("Salt (Base64 encoded): " + encodedSalt);  // Print the salt
+        */
         
         // Return the encrypted message along with the IV and salt (Base64 encoded)
         return encryptedMsg.toArray(new String[0]);
