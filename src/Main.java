@@ -47,6 +47,7 @@ public class Main {
 		String userIv = null;
 		String passwordSalt;
 		String passwordIv;
+		String tempString;
 
 		/*
 		 * @author chneau on Stack Exchange Original code found here:
@@ -133,11 +134,25 @@ public class Main {
 				// Retrieves first document with matching service name
 				Document foundDoc = collection.find(Filters.eq("service_name", desiredServiceName)).first();
 
+				
 				// Print out found document
 				if (foundDoc == null) {
 					System.out.println("Looks like you don't have credentials for that service!");
 				} else {
 					System.out.println(foundDoc);
+					
+					//String[] cbcDecrypt(String[] encryptedMsg, String password, String encodedIV, String encodedSalt)
+					
+					// Decrypt username
+					String encryptedUsername = foundDoc.get("username").toString();
+					System.out.println(encryptedUsername);
+					userIv = foundDoc.get("user_iv").toString();
+					userSalt = foundDoc.get("user_salt").toString();
+					splitText = encryptedUsername.split("");
+					splitHolder = EncryptionUtility.cbcDecrypt(splitText, userPassword, userIv, userSalt);
+					tempString = String.join("", splitHolder);
+					System.out.println("User: " + tempString);
+					
 				}
 			}
 			// add
@@ -167,13 +182,10 @@ public class Main {
 				MongoDatabase database = mongoClient.getDatabase("cs492data");
 				MongoCollection<Document> collection = database.getCollection(userCollection);
 				// Create document
-				List<Document> userData = Arrays.asList(new Document()
-						.append("service_name", serviceName)
-										.append("username", currentEncryptedUsername)
-										.append("password", currentEncryptedPassword)
-										.append("user_iv", userIv)
-										.append("user_salt", userSalt)
-						.append("password_iv", passwordIv).append("password_salt", passwordSalt));
+				List<Document> userData = Arrays.asList(new Document().append("service_name", serviceName)
+						.append("username", currentEncryptedUsername).append("password", currentEncryptedPassword)
+						.append("user_iv", userIv).append("user_salt", userSalt).append("password_iv", passwordIv)
+						.append("password_salt", passwordSalt));
 				try {
 					// Insert the documents into the specified collection
 					InsertManyResult result = collection.insertMany(userData);
