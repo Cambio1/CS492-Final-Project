@@ -2,6 +2,6 @@
 
 Cloud Password Storage Service that utilises 2 Factor Authentication.
 
-## Credits
-- [GMailer original code repo](https://github.com/sdaschner/java-playground/blob/gmail-api/src/main/java/com/sebastian_daschner/examples/GMailer.java)
+## Sources used
 - [MongoDB Atlas Documentation](https://www.mongodb.com/docs/atlas/)
+- [JavaMail Documentation](https://javaee.github.io/javamail/)

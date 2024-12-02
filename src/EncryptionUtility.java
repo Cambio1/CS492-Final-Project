@@ -14,6 +14,8 @@ import javax.crypto.spec.SecretKeySpec;
  * Implements password-based encryption with salt and IV for secure data protection.
  */
 public class EncryptionUtility {
+    static String thisSalt;
+    static String thisIv;
     
     /**
      * Container class for encrypted data including the encrypted message, initialization vector, and salt.
