@@ -1,5 +1,7 @@
 package cs492finalproject;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
@@ -29,7 +31,25 @@ import ch.qos.logback.classic.LoggerContext;
 public class Main {
 
 	public static void main(String[] args) throws Exception {
-		String uri = "mongodb+srv://cs492finalproject123:ZfIAfxrK8W6PvAcL@cs-492.burpl.mongodb.net/?retryWrites=true&w=majority&appName=CS-492";
+
+		/*
+		 * @author Pankaj on Digital Ocean
+		 * Original code here: https://www.digitalocean.com/community/tutorials/java-read-file-to-string
+		 */
+		BufferedReader reader = new BufferedReader(new FileReader("src/assets/uri"));
+		StringBuilder stringBuilder = new StringBuilder();
+		String line = null;
+		String ls = System.getProperty("line.separator");
+		while ((line = reader.readLine()) != null) {
+			stringBuilder.append(line);
+			stringBuilder.append(ls);
+		}
+		// Delete the last new line separator
+		stringBuilder.deleteCharAt(stringBuilder.length() - 1);
+		reader.close();
+		String content = stringBuilder.toString();
+
+		String uri = content;
 		Scanner scanner = new Scanner(System.in);
 		boolean userFound;
 		Document userDoc = null;
@@ -58,6 +78,11 @@ public class Main {
 
 		// Welcome/login
 		System.out.println("Welcome to Password Storage Program!");
+
+		// Is it a registered user?
+		System.out.println("Would you like to log in or register?");
+
+
 		System.out.println("Please enter your email: ");
 
 		// Get user's email associated with password storage service
@@ -198,8 +223,9 @@ public class Main {
 				try {
 					// Insert the documents into the specified collection
 					InsertManyResult result = collection.insertMany(userData);
+					System.out.println("Successfully added credentials!");
 				} catch (MongoException me) {
-					System.err.println("Unable to insert due to an error: " + me);
+					System.err.println("Unable to add credentials due to an error: " + me);
 				}
 			}
 		} else {
