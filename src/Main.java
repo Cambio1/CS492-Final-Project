@@ -1,12 +1,17 @@
+import org.bson.BasicBSONObject;
+import org.bson.BsonDocument;
 import org.bson.Document;
+import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.conversions.Bson;
-
 import static com.mongodb.client.model.Filters.eq;
-
+import com.mongodb.client.model.*;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
+import org.bson.*;
+import com.mongodb.BasicDBObject;
 import com.mongodb.ConnectionString;
+import com.mongodb.DBObject;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.MongoException;
 import com.mongodb.ServerApi;
@@ -14,9 +19,14 @@ import com.mongodb.ServerApiVersion;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.Updates;
 import com.mongodb.client.result.InsertManyResult;
+import com.mongodb.client.result.UpdateResult;
+import com.mongodb.util.JSON;
+
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
@@ -35,6 +45,9 @@ public class Main {
     	String uri = "mongodb+srv://cs492finalproject123:ZfIAfxrK8W6PvAcL@cs-492.burpl.mongodb.net/?retryWrites=true&w=majority&appName=CS-492";
     	Scanner scanner = new Scanner(System.in);
     	boolean userFound;
+    	Document userDoc = null;
+    	String userCollection = null;
+    	String objectId;
     	
     	/*
     	 * @author chneau on Stack Exchange
@@ -65,11 +78,18 @@ public class Main {
             // Find if email entered matches any document
             Document document = collection.find(filter).first();
             if (document == null) {
-                userFound = false;
+                userFound = false; // If no match, abort
                 System.out.println("ERROR ABORTING");
                 System.exit(0);
             } else {
                 userFound = true;
+                userDoc = document;
+                /*
+                 * Help from S Vinay Kumar on Stack Exchange
+                 * Original code: https://stackoverflow.com/a/53963664
+                 * Converts _id to String
+                 */
+                userCollection = document.get("_id").toString();
             }
         }
     	
@@ -79,64 +99,62 @@ public class Main {
         	EmailSender.sendVerificationCode(userEmail, sentCode);
         	System.out.println("An email has been sent to you. Please enter the code sent: ");
         	String inputtedCode = scanner.nextLine();
+        	// If codes match
         	if (sentCode.equals(inputtedCode)) {
         		System.out.println("Codes match!");
+        		// Access user's collection
+        		try (MongoClient mongoClient = MongoClients.create(uri)) {
+                    // Reference the database and collection to use
+                    MongoDatabase database = mongoClient.getDatabase("cs492data");
+                    MongoCollection<Document> collection = database.getCollection(userCollection);
+                    MongoCursor<Document> cursor = collection.find().iterator();
+                    while (cursor.hasNext()) {
+                        System.out.println("collection is " +cursor.next() );
+                    }
+        		}
         	} else {
+        		// If codes don't match, stop program
         		System.out.println("Codes do not match, aborting process...");
         		System.exit(0);
         	}
     	}
-        
-        //MongoDB stuff starts here; below is sample code taken from MongoDB
+    	
     	/*
-        String connectionString = "mongodb+srv://cs492finalproject123:ZfIAfxrK8W6PvAcL@cs-492.burpl.mongodb.net/?retryWrites=true&w=majority&appName=CS-492";
-        ServerApi serverApi = ServerApi.builder()
-                .version(ServerApiVersion.V1)
-                .build();
-        MongoClientSettings settings = MongoClientSettings.builder()
-                .applyConnectionString(new ConnectionString(connectionString))
-                .serverApi(serverApi)
-                .build();
-        // Create a new client and connect to the server
-        try (MongoClient mongoClient = MongoClients.create(settings)) {
-            try {
-                // Send a ping to confirm a successful connection
-                MongoDatabase database = mongoClient.getDatabase("admin");
-                database.runCommand(new Document("ping", 1));
-                System.out.println("Pinged your deployment. You successfully connected to MongoDB!");
-            } catch (MongoException e) {
-                e.printStackTrace();
-            }
-        }*/
-       
-    	/*
-        // Connect to your Atlas Cluster and insert a document
-        try (MongoClient mongoClient = MongoClients.create(uri)) {
-            // Reference the database and collection to use
-            MongoDatabase database = mongoClient.getDatabase("cs492data");
-            MongoCollection<Document> collection = database.getCollection("user_data");
-            // Create two documents
-            List<Document> userData = Arrays.asList(
-                    new Document().append("x", new Document().append("username", "username1").append("password", "password1"))
-                    );
-            try {
-                // Insert the documents into the specified collection
-                InsertManyResult result = collection.insertMany(userData);
-            } catch (MongoException me) {
-                System.err.println("Unable to insert due to an error: " + me);
-            }
-            // Find the document
-            Document document = collection.find(eq("x.username", "username1"))
-                    .first();
-            // Print results
-            if (document == null) {
-                System.out.println("No results found.");
-            } else {
-                System.out.println("Document found:");
-                System.out.println(document.toJson());
-            }
-        
-        }
-        */
+    	 * add = Add new credentials
+    	 * exit = Atop program
+    	 */
+    	System.out.println("LIST OF COMMANDS:\n add - Add new credentials\n exit - Quit the program");
+		System.out.println("Please enter command: ");
+    	String command = scanner.nextLine();
+    	if (command.equals("exit")) {
+    		System.out.println("Thank you for using Password Storage Program! Exiting...");
+    		System.exit(0);
+    	} else if (command.equals("add")) {
+    		System.out.println("Which service are you making the credentials for?");
+    		String serviceName = scanner.nextLine();
+    		System.out.println("Please enter your username for " + serviceName);
+    		String serviceUsername = scanner.nextLine();
+    		System.out.println("Please enter your password for " + serviceName);
+    		String servicePassword = scanner.nextLine();
+    		
+    		// Establish connection again...
+    		try (MongoClient mongoClient = MongoClients.create(uri)) {
+                // Reference the database and collection to use
+                MongoDatabase database = mongoClient.getDatabase("cs492data");
+                MongoCollection<Document> collection = database.getCollection(userCollection);
+                // Create two documents
+                List<Document> userData = Arrays.asList(
+                        new Document().append(serviceName, new Document().append("username", serviceUsername).append("password", servicePassword))
+                        );
+                try {
+                    // Insert the documents into the specified collection
+                    InsertManyResult result = collection.insertMany(userData);
+                } catch (MongoException me) {
+                    System.err.println("Unable to insert due to an error: " + me);
+                }
+    		}
+    	} else {
+    		System.out.println("Not a recognized command!");
+    	}
     }
 }
