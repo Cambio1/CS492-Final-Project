@@ -43,15 +43,13 @@ public class Main {
             stringBuilder.append(line);
             stringBuilder.append(ls);
         }
-
         // Delete the last new line separator
         stringBuilder.deleteCharAt(stringBuilder.length() - 1);
         reader.close();
         String content = stringBuilder.toString();
         String uri = content;
 
-		String initialInput;
-
+        String initialInput;						// log in, register, or something invalid?
         Scanner scanner = new Scanner(System.in);
         boolean userFound;
         Document userDoc = null;
@@ -69,9 +67,10 @@ public class Main {
         String passwordIv;
         String tempString;
         String userEmail;
-        String userPassword;
+        String userPassword = null;
         String encryptedRootEmail;
         String encryptedRootPassword;
+        String command = null;
 
         /*
 		 * @author chneau on Stack Exchange Original code found here:
@@ -84,127 +83,138 @@ public class Main {
 
         // Welcome/login
         System.out.println("Welcome to Password Storage Program!");
-            System.out.println("Would you like to 'log in' or 'register?'");
-			initialInput = scanner.nextLine();
-            if (initialInput.equals("register")) {
-                System.out.println("Great, please enter your email: ");
-                userEmail = scanner.nextLine();
-                System.out.println("Please enter a password: ");
-                userPassword = scanner.nextLine();
-                String sentCode = EmailSender.generateCode("ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890", 10);
-                EmailSender.sendVerificationCode(userEmail, sentCode);
-                System.out.println("An email has been sent to you. Please enter the code sent: ");
-                String inputtedCode = scanner.nextLine();
-                // If codes match
-                if (sentCode.equals(inputtedCode)) {
-                    System.out.println("Codes match!");
-                    // Encrypt password
-                    userText = new String[]{userPassword};
-                    EncryptionUtility.EncryptedData encryptedData1 = EncryptionUtility.cbcEncrypt(userText, userPassword);
-                    passwordIv = encryptedData1.getIv();
-                    passwordSalt = encryptedData1.getSalt();
-                    currentEncryptedPassword = String.join("", encryptedData1.getEncryptedMessage());
+        System.out.println("Would you like to 'log in' or 'register?'");
+        initialInput = scanner.nextLine();
+        if (initialInput.equals("register")) {
+            System.out.println("Great, please enter your email: ");
+            userEmail = scanner.nextLine();
+            System.out.println("Please enter a password: ");
+            userPassword = scanner.nextLine();
+            String sentCode = EmailSender.generateCode("ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890", 10);
+            EmailSender.sendVerificationCode(userEmail, sentCode);
+            System.out.println("An email has been sent to you. Please enter the code sent: ");
+            String inputtedCode = scanner.nextLine();
+            // If codes match
+            if (sentCode.equals(inputtedCode)) {
+                System.out.println("Codes match!");
+                // Encrypt password
+                userText = new String[]{userPassword};
+                EncryptionUtility.EncryptedData encryptedData1 = EncryptionUtility.cbcEncrypt(userText, userPassword);
+                passwordIv = encryptedData1.getIv();
+                passwordSalt = encryptedData1.getSalt();
+                currentEncryptedPassword = String.join("", encryptedData1.getEncryptedMessage());
 
-                    // Establish connection again...
-                    try (MongoClient mongoClient = MongoClients.create(uri)) {
-                        // Reference the database and collection to use
-                        MongoDatabase database = mongoClient.getDatabase("cs492data");
-                        MongoCollection<Document> collection = database.getCollection("user_data");
-                        // Create document
-                        List<Document> userData = Arrays.asList(new Document()
-                                .append("root_email", userEmail).append("root_password", currentEncryptedPassword)
-                                .append("password_iv", passwordIv).append("password_salt", passwordSalt));
-                        try {
-                            // Insert the documents into the specified collection
-                            InsertManyResult result = collection.insertMany(userData);
-                            Bson filter = Filters.and(Filters.eq("root_email", userEmail), Filters.eq("root_password", currentEncryptedPassword));
-                            Document document = collection.find(filter).first();
-                            userCollection = document.get("_id").toString();
-                            database.createCollection(userCollection);
-                            System.out.println("Successfully registered! Please login with those credentials.");
-                        } catch (MongoException me) {
-                            System.err.println("Unable to register due to an error: " + me);
-                        }
-                    }
-                } else {
-                    // If codes don't match, ask again
-                    System.out.println("Codes do not match. Want to try again?");
-                }
-            } else if (initialInput.equals("log in")) {
-                System.out.println("Please enter your email: ");
-
-                // Get user's email associated with password storage service
-                userEmail = scanner.nextLine();
-
-                // Get user's password associated with password storage service
-                System.out.println("Please enter your password: ");
-                userPassword = scanner.nextLine();
-
-                // Check if credentials match any user data
-                // Decrypt until match is found
-                // Establish connection
+                // Establish connection again...
                 try (MongoClient mongoClient = MongoClients.create(uri)) {
-                    // Assign entered email to filer
-                    Bson tempFilter = Filters.and(Filters.eq("root_email", userEmail));
-
-                    // Get collection
+                    // Reference the database and collection to use
                     MongoDatabase database = mongoClient.getDatabase("cs492data");
                     MongoCollection<Document> collection = database.getCollection("user_data");
-
-                    // Find doc with email
-                    Document tempDocument = collection.find(tempFilter).first();
-
-                    // Decrypt password
-                    String encryptedPassword = tempDocument.get("root_password").toString();
-                    passwordIv = tempDocument.get("password_iv").toString();
-                    passwordSalt = tempDocument.get("password_salt").toString();
-                    splitHolder = EncryptionUtility.cbcDecrypt(new String[]{encryptedPassword}, userPassword, passwordIv, passwordSalt);
-                    String decryptedPassword = splitHolder[0];
-                    if (decryptedPassword.equals(userPassword)) {
-                        userFound = true;
-                        userDoc = tempDocument;
-                        /*
-				 * Help from S Vinay Kumar on Stack Exchange Original code:
-				 * https://stackoverflow.com/a/53963664 Converts _id to String
-                         */
-                        userCollection = tempDocument.get("_id").toString();
-                    } else {
-                        userFound = false; // If no match, abort
-                        System.out.println("ERROR ABORTING");
-                        System.exit(0);
-                    }
-                    // Send email for 2FA if there's a match!
-                    if (userFound = true) {
-                        String sentCode = EmailSender.generateCode("ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890", 10);
-                        EmailSender.sendVerificationCode(userEmail, sentCode);
-                        System.out.println("An email has been sent to you. Please enter the code sent: ");
-                        String inputtedCode = scanner.nextLine();
-                        // If codes match
-                        if (sentCode.equals(inputtedCode)) {
-                            System.out.println("Codes match!");
-                        }
-                    } else {
-                        // If codes don't match, stop program
-                        System.out.println("Codes do not match, aborting process...");
-                        System.exit(0);
+                    // Create document
+                    List<Document> userData = Arrays.asList(new Document()
+                            .append("root_email", userEmail).append("root_password", currentEncryptedPassword)
+                            .append("password_iv", passwordIv).append("password_salt", passwordSalt));
+                    try {
+                        // Insert the documents into the specified collection
+                        InsertManyResult result = collection.insertMany(userData);
+                        Bson filter = Filters.and(Filters.eq("root_email", userEmail), Filters.eq("root_password", currentEncryptedPassword));
+                        Document document = collection.find(filter).first();
+                        userCollection = document.get("_id").toString();
+                        database.createCollection(userCollection);
+                        System.out.println("Successfully registered! Please login with those credentials.");
+                    } catch (MongoException me) {
+                        System.err.println("Unable to register due to an error: " + me);
                     }
                 }
-                /*
+            } else {
+                // If codes don't match, ask again
+                System.out.println("Codes do not match. Want to try again?");
+            }
+        } else if (initialInput.equals("log in")) {
+            System.out.println("Please enter your email: ");
+
+            // Get user's email associated with password storage service
+            userEmail = scanner.nextLine();
+
+            // Get user's password associated with password storage service
+            System.out.println("Please enter your password: ");
+            userPassword = scanner.nextLine();
+
+            // Check if credentials match any user data
+            // Decrypt until match is found
+            // Establish connection
+            try (MongoClient mongoClient = MongoClients.create(uri)) {
+                // Assign entered email to filer
+                Bson tempFilter = Filters.and(Filters.eq("root_email", userEmail));
+
+                // Get collection
+                MongoDatabase database = mongoClient.getDatabase("cs492data");
+                MongoCollection<Document> collection = database.getCollection("user_data");
+
+                // Find doc with email
+                Document tempDocument = collection.find(tempFilter).first();
+
+                // Decrypt password
+                String encryptedPassword = tempDocument.get("root_password").toString();
+                passwordIv = tempDocument.get("password_iv").toString();
+                passwordSalt = tempDocument.get("password_salt").toString();
+                splitHolder = EncryptionUtility.cbcDecrypt(new String[]{encryptedPassword}, userPassword, passwordIv, passwordSalt);
+                String decryptedPassword = splitHolder[0];
+                if (decryptedPassword.equals(userPassword)) {
+                    userFound = true;
+                    userDoc = tempDocument;
+                    /*
+				 * Help from S Vinay Kumar on Stack Exchange Original code:
+				 * https://stackoverflow.com/a/53963664 Converts _id to String
+                     */
+                    userCollection = tempDocument.get("_id").toString();
+                } else {
+                    userFound = false; // If no match, abort
+                    System.out.println("ERROR ABORTING");
+                    System.exit(0);
+                }
+                // Send email for 2FA if there's a match!
+                if (userFound = true) {
+                    String sentCode = EmailSender.generateCode("ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890", 10);
+                    EmailSender.sendVerificationCode(userEmail, sentCode);
+                    System.out.println("An email has been sent to you. Please enter the code sent: ");
+                    String inputtedCode = scanner.nextLine();
+                    // If codes match
+                    if (sentCode.equals(inputtedCode)) {
+                        System.out.println("Codes match!");
+                    }
+                } else {
+                    // If codes don't match, stop program
+                    System.out.println("Codes do not match, aborting process...");
+                    System.exit(0);
+                }
+            }
+            /*
 		 * get = View credentials 
 		 * add = Add new credentials 
 		 * exit = Stop program
-                 */
+             */
+            while (true) {
                 System.out.println("""
                                    LIST OF COMMANDS:
                                    get - View credentials 
                                    add - Add new credentials
                                    exit - Quit the program""");
                 System.out.println("Please enter command: ");
-                String command = scanner.nextLine();
+                command = scanner.nextLine();
+                while (true) {
+                    if (command.equals("get") == true || command.equals("add") == true || command.equals("exit") == true) {
+                        break;
+                    } else {
+                        System.out.println("Not a recognized command, please try again!");
+                        command = scanner.nextLine();
+                        continue;
+                    }
+                }
                 // exit
                 if (command.equals("exit")) {
                     System.out.println("Thank you for using Password Storage Program! Exiting...");
                     System.exit(0);
+                    break;
                     // get
                 } else if (command.equals("get")) {
                     // Access user's collection
@@ -284,10 +294,8 @@ public class Main {
                     System.out.println("Not a recognized command! Please try again!");
                 }
             }
-			else {
-				System.out.println("Not a recognized command! Please try again!");
-			}
+        } else {
+            System.out.println("Not a recognized command! Closing program...");
         }
     }
-
-
+}
