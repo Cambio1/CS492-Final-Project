@@ -21,12 +21,6 @@ import com.mongodb.client.result.InsertManyResult;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
-
-/*
- * EMAIL CREDENTIALS
- * Credentials:
- *	email: cs492finalproject123@gmail.com
- */
 public class Main {
 
     public static void main(String[] args) throws Exception {
@@ -47,30 +41,27 @@ public class Main {
         stringBuilder.deleteCharAt(stringBuilder.length() - 1);
         reader.close();
         String content = stringBuilder.toString();
-        String uri = content;
+		
+        String uri = content;						// needed to connect to database
 
         String initialInput;						// log in, register, or something invalid?
         Scanner scanner = new Scanner(System.in);
-        boolean userFound;
-        Document userDoc = null;
-        String userCollection = null;
-        String objectId;
+        boolean userFound;							// does the user's email exist in the database?
+        Document userDoc = null;					// current user's document in user_data
+        String userCollection = null;				// user's collection of credentials
         String currentEncryptedUsername;
         String currentEncryptedPassword;
-        String[] userText;
-        String[] splitHolder;
+        String[] userText;							// temp variables used to store text when encrypting/decrypting
+        String[] splitHolder;						
         EncryptionUtility encryptionUtil = new EncryptionUtility();
-        String decryptedText;
-        String userSalt = null;
-        String userIv = null;
-        String passwordSalt;
-        String passwordIv;
+        String userSalt = null;						// used when salt is generated for usernames
+        String userIv = null;						// used when iv is generated for usernames
+        String passwordSalt;						// generated salt for password. initialized when retrieving data
+        String passwordIv;							// generated iv for password. initialized when retrieving data
         String tempString;
-        String userEmail;
-        String userPassword = null;
-        String encryptedRootEmail;
-        String encryptedRootPassword;
-        String command = null;
+        String userEmail;							// "root" username
+        String userPassword = null;					// "root" password
+        String command = null;						// add, get, exit after logging in
 
         /*
 		 * @author chneau on Stack Exchange Original code found here:
@@ -85,6 +76,7 @@ public class Main {
         System.out.println("Welcome to Password Storage Program!");
         System.out.println("Would you like to 'log in' or 'register?'");
         initialInput = scanner.nextLine();
+		// when user registers
         if (initialInput.equals("register")) {
             System.out.println("Great, please enter your email: ");
             userEmail = scanner.nextLine();
@@ -129,6 +121,7 @@ public class Main {
                 // If codes don't match, ask again
                 System.out.println("Codes do not match. Want to try again?");
             }
+		// when user wants to log in
         } else if (initialInput.equals("log in")) {
             System.out.println("Please enter your email: ");
 
@@ -159,6 +152,8 @@ public class Main {
                 passwordSalt = tempDocument.get("password_salt").toString();
                 splitHolder = EncryptionUtility.cbcDecrypt(new String[]{encryptedPassword}, userPassword, passwordIv, passwordSalt);
                 String decryptedPassword = splitHolder[0];
+
+				// if password is valid, preemptively get unique id value
                 if (decryptedPassword.equals(userPassword)) {
                     userFound = true;
                     userDoc = tempDocument;
@@ -188,10 +183,11 @@ public class Main {
                     System.exit(0);
                 }
             }
-            /*
-		 * get = View credentials 
-		 * add = Add new credentials 
-		 * exit = Stop program
+			// what the user can do once they log in
+        	/*
+		 	* get = View credentials 
+		 	* add = Add new credentials 
+		 	* exit = Stop program
              */
             while (true) {
                 System.out.println("""
@@ -201,6 +197,7 @@ public class Main {
                                    exit - Quit the program""");
                 System.out.println("Please enter command: ");
                 command = scanner.nextLine();
+				// if user's input doesn't match a command, have them try again
                 while (true) {
                     if (command.equals("get") == true || command.equals("add") == true || command.equals("exit") == true) {
                         break;
@@ -215,7 +212,7 @@ public class Main {
                     System.out.println("Thank you for using Password Storage Program! Exiting...");
                     System.exit(0);
                     break;
-                    // get
+                // get
                 } else if (command.equals("get")) {
                     // Access user's collection
                     try (MongoClient mongoClient = MongoClients.create(uri)) {
@@ -234,7 +231,7 @@ public class Main {
                         } else {
                             System.out.println(foundDoc);
 
-                            // Decrypt username
+                            // Decrypt requested username and display
                             String encryptedUsername = foundDoc.get("username").toString();
                             userIv = foundDoc.get("user_iv").toString();
                             userSalt = foundDoc.get("user_salt").toString();
@@ -242,7 +239,7 @@ public class Main {
                             tempString = splitHolder[0];
                             System.out.println("User: " + tempString);
 
-                            // Decrypt password (if needed, similar to username)
+                            // Decrypt requested password and display
                             String encryptedPassword = foundDoc.get("password").toString();
                             passwordIv = foundDoc.get("password_iv").toString();
                             passwordSalt = foundDoc.get("password_salt").toString();
@@ -251,10 +248,12 @@ public class Main {
                             System.out.println("Password: " + decryptedPassword);
                         }
                     }
-                    // add
+                // add
                 } else if (command.equals("add")) {
+					// get name of service
                     System.out.println("Which service are you making the credentials for?");
                     String serviceName = scanner.nextLine();
+					// get username to encrypt and store
                     System.out.println("Please enter your username for " + serviceName);
                     String serviceUsername = scanner.nextLine();
                     // Encrypt username
@@ -263,7 +262,7 @@ public class Main {
                     userIv = encryptedData.getIv();
                     userSalt = encryptedData.getSalt();
                     currentEncryptedUsername = encryptedData.getEncryptedMessage()[0];
-
+					//get password to encrypt and store
                     System.out.println("Please enter your password for " + serviceName);
                     String servicePassword = scanner.nextLine();
                     // Encrypt password
@@ -277,7 +276,7 @@ public class Main {
                         // Reference the database and collection to use
                         MongoDatabase database = mongoClient.getDatabase("cs492data");
                         MongoCollection<Document> collection = database.getCollection(userCollection);
-                        // Create document
+                        // Create document with encrypted credentials
                         List<Document> userData = Arrays.asList(new Document().append("service_name", serviceName)
                                 .append("username", currentEncryptedUsername).append("password", currentEncryptedPassword)
                                 .append("user_iv", userIv).append("user_salt", userSalt).append("password_iv", passwordIv)
@@ -291,10 +290,12 @@ public class Main {
                         }
                     }
                 } else {
+					// when command (add, get, exit) is invalid
                     System.out.println("Not a recognized command! Please try again!");
                 }
             }
         } else {
+			// when input != 'log in' or 'register', stop
             System.out.println("Not a recognized command! Closing program...");
         }
     }
