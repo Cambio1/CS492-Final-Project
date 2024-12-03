@@ -21,10 +21,11 @@ public class EncryptionUtility {
      * Container class for encrypted data including the encrypted message, initialization vector, and salt.
      */
     public static class EncryptedData {
-        private final String[] encryptedMessage;
-        private final String iv;
-        private final String salt;
+        private final String[] encryptedMessage;        //message to be encrypted (username or password)
+        private final String iv;                        //Initialization vector used in CBC mode
+        private final String salt;                      //Random salt used to generate user's unique key
         
+
         /**
          * Constructs a new EncryptedData object.
          *
@@ -77,32 +78,42 @@ public class EncryptionUtility {
      */
     public static EncryptedData cbcEncrypt(String[] msg, String password) throws EncryptionException {
         try {
+
+            //generate a random IV
             byte[] iv = generateIV();
             String ivBase64 = Base64.getEncoder().encodeToString(iv);
             
+            //Generate a random salt
             byte[] salt = generateSalt(16);
             String saltBase64 = Base64.getEncoder().encodeToString(salt);
             
+            //Derive the key using the user's password and the salt
             SecretKeySpec key = deriveKey(password, salt);
             
+            //Initialize the AES cipher in CBC mode with padding
             Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
             IvParameterSpec ivSpec = new IvParameterSpec(iv);
             cipher.init(Cipher.ENCRYPT_MODE, key, ivSpec);
             
+            //List used to store encrypted blocks
             ArrayList<String> encryptedMsg = new ArrayList<>();
             
+            //Encrypt each string in the input array
             for (String block : msg) {
+                // Convert string to bytes, encrypt, and encode in Base64
                 byte[] encryptedBlock = cipher.doFinal(block.getBytes(StandardCharsets.UTF_8));
                 String encryptedBlockBase64 = Base64.getEncoder().encodeToString(encryptedBlock);
-                encryptedMsg.add(encryptedBlockBase64);
+                encryptedMsg.add(encryptedBlockBase64);  // Add encrypted block to the list
             }
             
+            // Return the encrypted data along with the IV and salt
             return new EncryptedData(
                 encryptedMsg.toArray(new String[0]),
                 ivBase64,
                 saltBase64
             );
         } catch (Exception e) {
+            // Wrap and throw any exception as an EncryptionException
             throw new EncryptionException("Failed to encrypt data", e);
         }
     }
@@ -138,6 +149,7 @@ public class EncryptionUtility {
             decryptedMsg.add(new String(decryptedBlock, StandardCharsets.UTF_8));
         }
     
+        //Return decrypted message
         return decryptedMsg.toArray(new String[0]);
     }
     
@@ -185,8 +197,8 @@ public class EncryptionUtility {
     }
 
     /**
-     * Derives an AES key from a password and salt using PBKDF2 with HMAC-SHA256.
-     * Uses 65536 iterations and generates a 256-bit key.
+     * Derives an AES key from a password and salt 
+     * Generates a 256-bit key.
      *
      * @param password      Password to derive key from
      * @param salt          Salt for key derivation
